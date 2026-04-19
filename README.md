@@ -30,4 +30,4 @@ Professional implementation of numerical methods for specialized fluid mechanics
 - `solve_ALG2/` — Collection of channel flow solvers and prototypes.
 
 ---
-*Created by Ivan [Surname] at the Chair of Aeromechanics, MSU.*
+*Created by Ivan Platonychev as part of coursework at the Chair of Aeromechanics, MSU.*
