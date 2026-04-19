@@ -1,0 +1,36 @@
+# Visual Studio
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.doccache
+*.suo
+
+# C++ Build
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.log
+*.tlog
+*.lastbuildstate
+*.idb
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+.DS_Store
