@@ -1,29 +1,33 @@
-# Numerical Fluid Dynamics: Viscoplastic Flow & Stochastic Solvers
+# Numerical Fluid Dynamics: Viscoplastic Flow Solvers
 
-Professional implementation of numerical methods for complex fluid mechanics and physics problems, developed during research at the **Mechanical and Mathematical Faculty of MSU (Lomonosov Moscow State University)**.
+Professional implementation of numerical methods for specialized fluid mechanics problems, developed during research at the **Mechanical and Mathematical Faculty of MSU (Lomonosov Moscow State University)**.
 
 ## 🚀 Key Projects
 
-### 1. Viscoplastic Flow Solvers (Bingham Fluid)
-- **Problem:** Solving flow in channels and 2D flat domains (including L-shaped and cavity domains) using regularization and optimization methods.
-- **Algorithms:** Implementation of **ALG2/ALG** iterative algorithms coupled with the **FISTA** (Fast Iterative Shrinkage-Thresholding Algorithm) for accelerated convergence.
-- **Technology:** Developed in **C++** focusing on high-performance computations, sparse matrix handling, and Conjugate Gradient methods.
-- **Numerical methods:** 3-point and 5-point sweep methods, iterative PNM/PTM schemes.
+### 1. Flat L-Shaped Domain Solver
+- **Problem:** Modeling viscoplastic flow in complex L-shaped geometries using regularization techniques.
+- **Algorithms:** Implementation of **FISTA** (Fast Iterative Shrinkage-Thresholding Algorithm) for accelerated minimization of the viscoplastic functional.
+- **Technology:** **C++** with automated multithreading (`ThreadPool.h`) and sparse matrix optimizations.
+- **Visualization:** Integrated Python scripts for modeling flow fields and rigid zones.
 
-### 2. Atomic Interaction Modeling
-- **Problem:** Stochastic simulation of hydrogen atoms and protons interactions.
-- **Methodology:** Implemented **Monte Carlo** methods on C++ for physical process modeling.
-- **Analysis:** Post-processing and data visualization using Python.
+### 2. Cavity Flow Solver (Caverna)
+- **Problem:** Simulating 2D viscoplastic flow in a square cavity.
+- **Optimization:** Comparison between standard ALM (Augmented Lagrangian Method) and accelerated FISTA variants.
+- **Numerical methods:** High-precision discrete solvers for Poisson equations and velocity field updates.
+
+### 3. Channel Flow Solvers (ALG2)
+- **Problem:** Classical viscoplastic flow in simplified channel geometries.
+- **Methodology:** Robust **ALG2** iterative algorithm for reliable convergence in viscoplastic modeling.
 
 ## 🛠 Tech Stack
 - **Languages:** C++, Python, SQL, LaTeX
-- **Academic Focus:** Numerical Methods, Optimization, Aeromechanics, Mathematical Statistics
+- **Numerical libraries:** Custom sparse solvers, Conjugate Gradient, Poisson solvers.
+- **Academic Focus:** Numerical Methods, Non-Newtonian Fluids, Aeromechanics.
 
 ## 📁 Repository Structure
-- `Solver_L_ALG_FISTA/` — Flat L-shaped domain solver (FISTA, Sparse matrices).
-- `Solver_ALG_FISTA_caverna/` — Cavity flow solver (FISTA, Sparse matrices).
-- `solve_ALG2/` — Channel flow solvers (ALG2, L-shaped and square).
-- `Monte_Karlo/` — Stochastic modeling of atomic interactions.
+- `Solver_L_ALG_FISTA/` — L-shaped domain solver (Main project).
+- `Solver_ALG_FISTA_caverna/` — Cavity flow solver implementation.
+- `solve_ALG2/` — Collection of channel flow solvers and prototypes.
 
 ---
-*Created by Ivan [Surname] as part of coursework at the Chair of Aeromechanics, MSU.*
+*Created by Ivan [Surname] at the Chair of Aeromechanics, MSU.*
