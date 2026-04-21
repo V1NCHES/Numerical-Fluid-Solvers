@@ -103,8 +103,8 @@ ALG2_Slipper::ALG2_Slipper(double hx, double hy, double Lx1, double Lx2, double 
    norma22 = std::vector<std::vector<double>>(nx1 + 1, std::vector<double>(ny2, 0.0));// По y v2
 
   
-   norma_lambda11 = std::vector<std::vector<double>>(nx1 + nx2, std::vector<double>(ny1 + 1, 0.0)); // По x v1
-   norma_lambda21 = std::vector<std::vector<double>>(nx1, std::vector<double>(ny2, 0.0));// По x v2
+   //norma_lambda11 = std::vector<std::vector<double>>(nx1 + nx2, std::vector<double>(ny1 + 1, 0.0)); // По x v1
+   //norma_lambda21 = std::vector<std::vector<double>>(nx1, std::vector<double>(ny2, 0.0));// По x v2
 
    std::ofstream file_diff(this->filename + "diff.txt");
    if (!file_diff.is_open()) { std::cout << "Ошибка открытия файла: " << this->filename + "diff.txt" << std::endl; return; }
@@ -285,6 +285,13 @@ void ALG2_Slipper::calculation_t(std::vector<std::vector<double>>& lamda, std::v
             t[i][j] = lamda[i][j] + this->r * grad_v[i][j], t_extended[i+k][j+l] = t[i][j];
 }
 
+void ALG2_Slipper::calculation_t_lamda(std::vector<std::vector<double>>& lamda, std::vector<std::vector<double>>& t, std::vector<std::vector<double>>& t_extended, int Nx, int Ny, int k, int l)
+{
+    for (int i = 0; i < Nx; ++i)
+        for (int j = 0; j < Ny; ++j)
+            t[i][j] = lamda[i][j], t_extended[i + k][j + l] = t[i][j];
+}
+
 void ALG2_Slipper::averaging_t(std::vector<std::vector<double>>& t_avg, std::vector<std::vector<double>>& t_extended, int Nx, int Ny)
 {
     for (int i = 0; i < Nx; i++)
@@ -365,18 +372,24 @@ void ALG2_Slipper::update_lambda() {
     calculation_lamda(lambda21, grad_v21, q21, nx1, ny2);
     calculation_lamda(lambda22, grad_v22, q22, nx1 + 1, ny2);
 
-    for (int i = 0; i < nx1 + nx2; i++) {
-        for (int j = 0; j < ny1 + 1; j++) {
-            norma_lambda11[i][j] = fabs(lambda11[i][j]);
-        }
-    }
+    calculation_t_lamda(lambda11, t11, t11_extended, nx1 + nx2, ny1 + 1, 1, 0);
+    calculation_t_lamda(lambda12, t12, t12_extended, nx1 + 1 + nx2, ny1, 0, 1);
+    calculation_t_lamda(lambda21, t21, t21_extended, nx1, ny2, 1, 0);
+    calculation_t_lamda(lambda22, t22, t22_extended, nx1 + 1, ny2, 0, 1);
 
-    for (int i = 0; i < nx1; i++) {
-        for (int j = 0; j < ny2; j++) {
-            norma_lambda21[i][j] = fabs(lambda21[i][j]);
-        }
-    }
 
+    averaging_t(t11_avg, t11_extended, nx1 + nx2 + 1, ny1);
+    averaging_t(t12_avg, t12_extended, nx1 + nx2, ny1 + 1);
+    averaging_t(t21_avg, t21_extended, nx1 + 1, ny2);
+    averaging_t(t22_avg, t22_extended, nx1, ny2);
+
+
+    calculation_norma(t11, t12_avg, norma11, nx1 + nx2, ny1 + 1);
+    calculation_norma(t12, t11_avg, norma12, nx1 + 1 + nx2, ny1);
+    calculation_norma(t21, t22_avg, norma21, nx1, ny2);
+    calculation_norma(t22, t21_avg, norma22, nx1 + 1, ny2);
+
+    
     std::cout << "Максимальное изменение lambda : " << this->diff_max << std::endl;
 }
 
@@ -440,8 +453,8 @@ int ALG2_Slipper::run_full_algorithm(int max_iterations, double convergence_tol)
         
         print_iteration_time(); // Выводим время выполнения итерации
 
-        if (iteration + 1 >= max_iterations) Save(1);
-        else if (iteration % 10 == 0)
+        
+       if (iteration % 100 == 0)
         {
             Save(2);
         }
@@ -459,7 +472,7 @@ int ALG2_Slipper::run_full_algorithm(int max_iterations, double convergence_tol)
         }
         
     }
-
+    Save(1);
     // Вычисляем общее время работы алгоритма
     auto total_end_time = std::chrono::high_resolution_clock::now();
     total_algorithm_time = std::chrono::duration<double>(total_end_time - total_start_time).count();
@@ -502,33 +515,107 @@ void ALG2_Slipper::Save(int bol)
     if (bol == 1)
     { 
 
-        std::string file_v = this->filename + "v_iteration_" + std::to_string(this->current_iteration) + ".txt";
+        std::string file_v = this->filename + "output_data/v_iteration_" + std::to_string(this->current_iteration) + ".txt";
         save_V_file(v1, v2, nx1 + 1 + nx2, ny1 + 1, nx1 + 1, ny2, file_v.c_str());
 
-        std::string file_q1 = this->filename + "q1_iteration_" + std::to_string(this->current_iteration) + ".txt";
-        save_V_file(q11, q21, nx1 + nx2, ny1 + 1, nx1, ny2, file_q1.c_str());
+        /*std::string file_q1 = this->filename + "q1_iteration_" + std::to_string(this->current_iteration) + ".txt";
+        save_V_file(q11, q21, nx1 + nx2, ny1 + 1, nx1, ny2, file_q1.c_str());*/
 
-        std::string file_lambda1 = this->filename + "lambda1_iteration_" + std::to_string(this->current_iteration) + ".txt";
+       /* std::string file_lambda1 = this->filename + "lambda1_iteration_" + std::to_string(this->current_iteration) + ".txt";
         save_V_file(lambda11, lambda21, nx1 + nx2, ny1 + 1, nx1, ny2, file_lambda1.c_str());
 
         std::string file_norma1 = this->filename + "norma1_iteration_" + std::to_string(this->current_iteration) + ".txt";
-        save_V_file(norma11, norma21, nx1 + nx2, ny1 + 1, nx1, ny2, file_norma1.c_str());
+        save_V_file(norma11, norma21, nx1 + nx2, ny1 + 1, nx1, ny2, file_norma1.c_str());*/
 
-        std::string file_norm_lambda1 = this->filename + "norma_lambda1_iteration_" + std::to_string(this->current_iteration) + ".txt";
-        save_V_file(norma_lambda11, norma_lambda21, nx1 + nx2, ny1 + 1, nx1, ny2, file_norm_lambda1.c_str());//*/
+        std::string file_norm_lambda1 = this->filename + "output_data/norma11_iteration_" + std::to_string(this->current_iteration) + ".txt";
+        save_V_file_norma(nx1 + nx2, ny1 + 1, nx1, ny2, file_norm_lambda1.c_str());//*/
 
     }
     else if(bol == 2) {
 
-        std::string file_norma1 = this->filename + "norma1_iteration_" + std::to_string(this->current_iteration) + ".txt";
-        save_V_file(norma11, norma21, nx1 + nx2, ny1 + 1, nx1, ny2, file_norma1.c_str());
+        std::string file_norma1 = this->filename + "output_data/norma11_iteration_" + std::to_string(this->current_iteration) + ".txt";
+        save_V_file_norma( nx1 + nx2, ny1 + 1, nx1, ny2, file_norma1.c_str());
     }
 
-    std::ofstream file_diff(this->filename + "diff.txt", std::ios::app);
+    std::ofstream file_diff(this->filename + "output_data/diff_max.txt");
     if (!file_diff.is_open()) { std::cout << "Ошибка открытия файла: " << this->filename + "diff.txt" << std::endl; return; }
-    file_diff << this->diff_max << std::endl;
+    for (int i = 0; i < diff.size(); ++i)
+        file_diff << diff[i] << std::endl;
+
     file_diff.close();
 }
+
+
+
+
+void ALG2_Slipper::save_V_file_norma(int Nx1, int Ny1, int Nx2, int Ny2, const std::string& filename)
+{
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Ошибка: не удалось открыть файл " << filename << std::endl;
+        return;
+    }
+    file.precision(6);
+    file << std::fixed;
+
+    // --- Блок 1: Нижний прямоугольник ---
+    // (Nx1 - ширина всего основания, Ny1 - высота первой части)
+    for (int j = 1; j <= Ny1; j++)
+    {
+        // Горизонтальная компонента (Тип 1): x смещен, y на линии j-1
+        for (int i = 1; i <= Nx1; i++)
+        {
+            double x = i * hx - hx / 2.0;
+            double y = (j - 1) * hy;
+            file << x << " " << y << " " << norma11[i - 1][j - 1] << " " << std::endl;
+        }
+        file << std::endl;
+
+        // Вертикальная компонента (Тип 2): x на линии, y смещен (j - 1/2)
+        for (int i = 0; i <= Nx1; i++)
+        {
+            double x = i * hx;
+            double y = j * hy - hy / 2.0;
+            file << x << " " << y << " " << norma12[i][j - 1] << " " << std::endl;
+        }
+        file << std::endl;
+    }
+    // Замыкающая линия горизонтальной компоненты для Блока 1 (на стыке или верхней границе)
+    for (int i = 1; i <= Nx1; i++)
+    {
+        double x = i * hx - hx / 2.0;
+        double y = Ny1 * hy;
+        file << x << " " << y << " " << norma11[i - 1][Ny1] << " " << std::endl;
+    }
+    file << std::endl;
+
+    // --- Блок 2: Верхний прямоугольник ---
+    // (Nx2 - ширина верхней части, Ny2 - высота второй части)
+    for (int j = 1; j <= Ny2; j++)
+    {
+        // Горизонтальная компонента
+        for (int i = 1; i <= Nx2; i++)
+        {
+            double x = i * hx - hx / 2.0;
+            double y = (Ny1 + j - 1) * hy;
+            file << x << " " << y << " " << norma21[i - 1][j - 1] << " " << std::endl;
+        }
+        file << std::endl;
+
+        // Вертикальная компонента
+        for (int i = 0; i <= Nx2; i++)
+        {
+            double x = i * hx;
+            double y = (Ny1 + j) * hy - hy / 2.0;
+            file << x << " " << y << " " << norma22[i][j - 1] << " " << std::endl;
+        }
+        file << std::endl;
+    }
+
+    file.close();
+    std::cout << "Данные записаны (L-область): " << filename << std::endl;
+}
+
 
 void ALG2_Slipper::save_V_file(const std::vector<std::vector<double>>& data1, const std::vector<std::vector<double>>& data2, int Nx1, int Ny1, int Nx2, int Ny2,  const std::string& filename)
 {
@@ -620,3 +707,5 @@ void ALG2_Slipper::print_iteration_time() {
     std::cout << "  Обновление lambda: " << std::setprecision(4) << update_lambda_time << " сек ("
         << std::setprecision(1) << (update_lambda_time / total_time * 100) << "%)" << std::endl;
 }
+
+

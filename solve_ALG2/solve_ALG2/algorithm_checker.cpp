@@ -554,16 +554,13 @@ void AlgorithmChecker::Save(int bol)
 
      /*  std::string file_norma1 = this->filename + "output_data/iret" + std::to_string(this->current_iteration) + "_norma12.txt";
        save_matrix_to_file(this->norm2, this->nx - 1, this->ny, file_norma1.c_str());*/
-
-        std::ofstream file_diff(this->filename + "diff.txt");
-  if (!file_diff.is_open()) {std::cout << "Ошибка открытия файла: " << this->filename + "diff.txt" << std::endl;return;}
-  for(int i = 0;i<diff.size();++i)
-    file_diff << diff[i] << std::endl;
-
-  file_diff.close();
-
-
    }
+   std::ofstream file_diff(this->filename + "diff_max.txt");
+   if (!file_diff.is_open()) { std::cout << "Ошибка открытия файла: " << this->filename + "diff.txt" << std::endl; return; }
+   for (int i = 0; i < diff.size(); ++i)
+       file_diff << diff[i] << std::endl;
+
+   file_diff.close();
 
   /* std::ofstream file_diff(this->filename + "diff.txt", std::ios::app);
    if (!file_diff.is_open()) {std::cout << "Ошибка открытия файла: " << this->filename + "diff.txt" << std::endl;return;}

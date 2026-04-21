@@ -76,8 +76,8 @@ public:
     std::vector<std::vector<double>> norma21;
     std::vector<std::vector<double>> norma22;
 
-    std::vector<std::vector<double>> norma_lambda11;
-    std::vector<std::vector<double>> norma_lambda21;
+   /* std::vector<std::vector<double>> norma_lambda11;
+    std::vector<std::vector<double>> norma_lambda21;*/
 
     // Параметры алгоритма
     double r;           // Параметр регуляризации
@@ -146,6 +146,10 @@ public:
 
     void save_matrix_to_file_norma(double** norna1, double** norma2, int rows, int cols, const char* filename);
     std::vector <double> diff;
+
+    void calculation_t_lamda(std::vector<std::vector<double>>& lamda, std::vector<std::vector<double>>& t, std::vector<std::vector<double>>& t_extended, int Nx, int Ny, int k, int l);
+    void save_V_file_norma(int Nx1, int Ny1, int Nx2, int Ny2, const std::string& filename);
+
 };//*/
 
 void print_v(std::vector<std::vector<double>>& print1, std::vector<std::vector<double>>& print2, int nx1, int nx2, int ny1, int ny2);
