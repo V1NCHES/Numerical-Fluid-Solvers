@@ -177,9 +177,9 @@ void CavernaSolver2D::init_fields() {
     tau12_aux.assign(rows, std::vector<double>(cols, 0.0));
     tau22_aux.assign(rows, std::vector<double>(cols, 0.0));
 
-    tau11_aux_stable.assign(rows, std::vector<double>(cols, 0.0));
+   /* tau11_aux_stable.assign(rows, std::vector<double>(cols, 0.0));
     tau12_aux_stable.assign(rows, std::vector<double>(cols, 0.0));
-    tau22_aux_stable.assign(rows, std::vector<double>(cols, 0.0));
+    tau22_aux_stable.assign(rows, std::vector<double>(cols, 0.0));*/
 
     
 
@@ -190,8 +190,7 @@ void CavernaSolver2D::init_fields() {
     //ag_t12.assign(rows, std::vector<double>(cols, 0.0));
 
     //eta = 0.999;
-    eta = 1.0;
-    alpha_boost_prev = 1.0;
+    
     c_k_prev = 1000;
     // ////////////////////////////
     iter = 1;
@@ -336,7 +335,7 @@ void CavernaSolver2D::update_iter_boost(int iteration)
 
 void CavernaSolver2D::save_iter(int iteration)
 {
-    std::string prefix = "SAVE ITERATION/iter_" + std::to_string(iteration) + "_";
+    std::string prefix = "SAVE ITERATION_5/iter_" + std::to_string(iteration) + "_";
     int NX = nx + 2, Ny = ny + 2;
     save_iteration(prefix + "fu.txt", fu, NX, Ny);
     save_iteration(prefix + "fv.txt", fv, NX, Ny);

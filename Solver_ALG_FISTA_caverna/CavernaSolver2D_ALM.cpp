@@ -5,7 +5,7 @@ int CavernaSolver2D::run_full_algorithm_boost(int max_iterations, double toleran
     Timer timer;
     double t_sg;
     //double diff_max = 1.0;
-    // u, v, p, tau, gamma, fx, fy, sigma = 0 По начальному приближению, а g = 0 из условий на границе
+    // u, v, p, tau, gamma, fx, fy, sigma = 0 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ g = 0 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     if (iter == 1)
     //for (; iter < 41; ++iter)
     {
@@ -19,25 +19,7 @@ int CavernaSolver2D::run_full_algorithm_boost(int max_iterations, double toleran
 
         // Step 0.3: Update Tau (Multiplier)
         diff_max.push_back(update_tau());
-       // c_k_prev = diff_max[iter - 1];
-        //update_f();
-
         std::cout << "Iteration " << iter << " | Diff Max: " << diff_max[iter - 1] << " | Time CG:" << t_sg << " s " << " | Time Algorithm: " << timer.elapsed() << "s" << std::endl;
-
-        /*if (iter % 20 == 0)
-        {
-            for (int j = 1; j <= ny - 1; ++j) {
-                for (int i = 1; i <= nx - 1; ++i) {
-                    f_psi[j][i] = (v[j][i + 1] - v[j][i]) / hx - (u[j + 1][i] - u[j][i]) / hy;
-                }
-            }
-            solve_poisson_psi(psi, f_psi);
-            save_iter(iter);
-            save_all(iter);
-        }*/
-
-        //std::cout << "Iteration " << iter << " | Diff Max: " << diff_max[iter-1] << " | Time CG:" << t_sg << " s " << " | Time Algorithm: " << timer.elapsed() << "s" << std::endl;
-        //save_all(1);
         iter++;
     }
     std::cout << std::endl << "Start fast ALM" << std::endl;
@@ -45,12 +27,8 @@ int CavernaSolver2D::run_full_algorithm_boost(int max_iterations, double toleran
 
         // Step 1: Update Gamma (Plasticity)
         update_q();
-
         // Step 2: Update F (Sources for next iter)
         update_f_boost();
-
-
-
         // Step 3: Pressure Step (Empty block for your CG implementation)
         Timer timer_cg_custom;
         solve_pressure_cg_custom();
@@ -80,16 +58,43 @@ int CavernaSolver2D::run_full_algorithm_boost(int max_iterations, double toleran
             save_all(iter);
             //save_iter_boost(iter);
         }
-        //if(diff_max[iter - 1])
-        //if (diff_max[iter - 1] < tolerance) { std::cout << "Converged in " << iter << " iterations." << std::endl; break; }
+        if (diff_max[iter - 1] < tolerance) { std::cout << "Converged in " << iter << " iterations." << std::endl; break; }
     }
 
     
     
     save_all(iter);
-    //save_iter_boost(iter);
+   
     return 0;
 }
+
+double CavernaSolver2D::diff_l2_norma()
+{
+    double sum_sq = 0.0, diff11, diff12;
+    int count = 0;
+
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (11 пїЅ 22)
+    for (int j = 0; j <= ny + 1; ++j) {
+        for (int i = 0; i <= nx + 1; ++i) {
+            diff11 = norma11[j][i];
+            sum_sq += diff11 * diff11;
+            count++;
+        }
+    }
+
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (12)
+    for (int j = 0; j <= ny; ++j) {
+        for (int i = 0; i <= nx; ++i) {
+            diff12 = norma12[j][i];
+            sum_sq += diff12 * diff12;
+            count++;
+        }
+    }
+
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ Dl2 пїЅ MATLAB)
+    return std::sqrt(sum_sq / count); //
+}
+
 
 double CavernaSolver2D::diff_max_norma()
 {
@@ -192,13 +197,13 @@ void CavernaSolver2D::update_tau_boost()
 
     double diff = 0.0;
     double T11, T22, T12, tau11_prev, tau12_prev, tau22_prev;
-    // Step 1: Обновление tau и вычисление diff 
+    // Step 1: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ tau пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ diff 
     for (int j = 0; j <= ny + 1; ++j) {
         for (int i = 0; i <= nx + 1; ++i)
         {
             tau11_prev = tau11_aux[j][i];       tau22_prev = tau22_aux[j][i];
-            T11 = (du_dx[j][i] - q11[j][i]);   tau11_aux[j][i] = tau11[j][i] + r * T11;
-            T22 = (dv_dy[j][i] - q22[j][i]);   tau22_aux[j][i] = tau22[j][i] + r * T22;
+            T11 = (du_dx[j][i] - q11[j][i]);   tau11_aux[j][i] = tau11[j][i] +  T11;
+            T22 = (dv_dy[j][i] - q22[j][i]);   tau22_aux[j][i] = tau22[j][i] +  T22;
 
             diff = std::max({ diff, std::abs(T11), std::abs(T22) });
             diff_tau11[j][i] = tau11_aux[j][i] - tau11_prev; diff_tau22[j][i] = tau22_aux[j][i] - tau22_prev;
@@ -210,130 +215,19 @@ void CavernaSolver2D::update_tau_boost()
         {
             tau12_prev = tau12_aux[j][i];
             D12[j][i] = (du_dy[j][i] + dv_dx[j][i]) / 2.0;
-            T12 = (D12[j][i] - q12[j][i]);     tau12_aux[j][i] = tau12[j][i] + r * T12;
+            T12 = (D12[j][i] - q12[j][i]);     tau12_aux[j][i] = tau12[j][i] +  T12;
 
             diff = std::max(diff, std::abs(T12));
             diff_tau12[j][i] = tau12_aux[j][i] - tau12_prev;
         }
     }
     norma_11_12(diff_tau11, diff_tau12, diff_tau22);
-    c_k = diff_max_norma();
+    //c_k = diff_max_norma();
+    c_k = diff_l2_norma();
     //c_k = diff;
 }
 
-double CavernaSolver2D::extrapolate_tau_next()
-{
-    // double tau = 0;
-    double diff = 0.0;
-    double tau_11_cur, tau_12_cur, tau_22_cur;
-    std::cout << std::endl<< "c_k = " << c_k << " ; eta * c_k_prev = " << eta * c_k_prev;
 
-
-    if (c_k < eta * c_k_prev ) //|| next_boost
-    {
-        next_boost = false;
-        alpha_boost = (1 + sqrt(1 + 4 * alpha_boost_prev * alpha_boost_prev)) / 2.0;
-        std::cout << ";  boost(); alpha_boost = " << alpha_boost << std::endl;
-        for (int j = 0; j <= ny + 1; ++j) {
-            for (int i = 0; i <= nx + 1; ++i)
-            {
-                tau_11_cur = tau11[j][i]; tau_22_cur = tau22[j][i];
-                tau11[j][i] = tau11_aux[j][i] + (alpha_boost_prev - 1.0) * (tau11_aux[j][i] - tau11_aux_prev[j][i]) / alpha_boost;
-
-                tau22[j][i] = tau22_aux[j][i] + (alpha_boost_prev - 1.0) * (tau22_aux[j][i] - tau22_aux_prev[j][i]) / alpha_boost;
-
-                tau11_aux_stable[j][i] = tau11_aux_prev[j][i];  tau11_aux_prev[j][i] = tau11_aux[j][i];
-
-                tau22_aux_stable[j][i] = tau22_aux_prev[j][i]; tau22_aux_prev[j][i] = tau22_aux[j][i];
-
-                //tau11_boost_prev[j][i] = tau11_boost[j][i];
-                //tau22_boost_prev[j][i] = tau22_boost[j][i];
-                diff_tau11[j][i] = tau11[j][i] - tau_11_cur;
-                diff_tau22[j][i] = tau22[j][i] - tau_22_cur;
-            }
-        }
-
-        for (int j = 0; j <= ny; ++j) {
-            for (int i = 0; i <= nx; ++i)
-            {
-                tau_12_cur = tau12[j][i];
-
-                tau12[j][i] = tau12_aux[j][i] + (alpha_boost_prev - 1.0) * (tau12_aux[j][i] - tau12_aux_prev[j][i]) / alpha_boost;
-
-                tau12_aux_stable[j][i] = tau12_aux_prev[j][i];
-
-                tau12_aux_prev[j][i] = tau12_aux[j][i];
-                 //tau12_boost_prev[j][i] = tau12_boost[j][i];
-                diff_tau12[j][i] = tau12[j][i] - tau_12_cur;
-            }
-        }
-
-        alpha_boost_prev = alpha_boost;
-        c_k_prev = c_k;
-        norma_11_12(diff_tau11, diff_tau12, diff_tau22);
-        diff = diff_max_norma();
-    }
-    else
-    {
-        if (iter > 3)
-        {
-            //std::cout << "()" << std::endl;
-            //if (next_boost)
-            //{
-            //    //next_boost = false;
-            //    alpha_boost_prev = 1.1;
-            //}
-            //else
-            //{
-            //    alpha_boost_prev = 1.0;
-            //    next_boost = true;
-            //}
-            alpha_boost_prev = 1.0; //(1 + sqrt(5.0)) / 2.0;;
-            next_boost = true;
-            c_k_prev = c_k_prev / eta;
-            std::cout << "; Anty_boost(); alpha_boost_prev = " << alpha_boost_prev << "; diff = "<< diff_max[iter - 2] << std::endl;
-
-            for (int j = 0; j <= ny + 1; ++j) {
-                for (int i = 0; i <= nx + 1; ++i)
-                {
-                    tau11[j][i] = tau11_aux_stable[j][i];
-
-                    tau22[j][i] = tau22_aux_stable[j][i];
-
-                    tau11_aux_prev[j][i] = tau11_aux_stable[j][i];
-                    tau22_aux_prev[j][i] = tau22_aux_stable[j][i];
-                    //tau11_boost[j][i] = tau11_boost_prev[j][i];
-
-                    //tau22_boost[j][i] = tau22_boost_prev[j][i];
-                }
-            }
-
-            for (int j = 0; j <= ny; ++j) {
-                for (int i = 0; i <= nx; ++i)
-                {
-
-                    tau12[j][i] = tau12_aux_stable[j][i];
-                    tau12_aux_prev[j][i] = tau12_aux_stable[j][i];
-                    //tau12_boost[j][i] = tau12_boost_prev[j][i];
-                }
-            }
-           
-            diff = diff_max[iter - 2];
-            
-        }
-        else
-        {
-            std::cout << "Error()" << std::endl;
-            //return update_tau();
-
-        }
-        
-    }
-
-    norma_11_12(tau11, tau12, tau22);
-
-    return diff;
-}
 
 
 // Algorithm 9 (Fast AMA) + Algorithm 8 (Fast ADMM with Restart) -- Goldstein et al.
@@ -351,60 +245,58 @@ double CavernaSolver2D::extrapolate_tau_next_optimized()
 {
     double diff = 0.0;
     
-    // eta_relax = 0.99 (как в статье Goldstein, Alg 8). 
-    // Слишком большие значения (0.999999) вызывают "рестарт-петлю" из-за шума.
-    const double eta_relax = 0.99; 
-
-    // Используем статический счетчик для Cooldown (запрет рестарта слишком часто)
-    static int last_restart_iter = -10; 
+    // eta_relax = 0.99 (пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Goldstein, Alg 8). 
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (0.999999) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅ" пїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅ.
+    const double eta_relax = 0.9999999; 
+    //double alpha_boost = 1.0, alpha_boost_prev = 1.0;
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ Cooldown (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
+    
     double momentum = 0;
-    // Условие рестарта: рост ошибки И прошло более 5 шагов с прошлого рестарта
-    if (c_k > eta_relax * c_k_prev && (iter - last_restart_iter) > 5)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 5 пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    if (c_k > eta_relax * c_k_prev)
     {
         std::cout << "; [Restart] c_k/c_prev=" << c_k / c_k_prev << " at iter " << iter << std::endl;
-        last_restart_iter = iter;
+        
         
         alpha_boost_prev = 1.0; 
-        c_k_prev = c_k; // Сбрасываем порог к текущему значению
+        c_k_prev = c_k / eta_relax; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
         for (int j = 0; j <= ny + 1; ++j) {
-            for (int i = 0; i <= nx + 1; ++i) {
-                tau11[j][i] = tau11_aux[j][i];
-                tau22[j][i] = tau22_aux[j][i];
-                tau11_aux_prev[j][i] = tau11_aux[j][i];
-                tau22_aux_prev[j][i] = tau22_aux[j][i];
+            for (int i = 0; i <= nx + 1; ++i) { 
+                //tau11[j][i] = tau11_aux[j][i]; tau22[j][i] = tau22_aux[j][i];
+                //tau11_aux_prev[j][i] = tau11_aux[j][i]; tau22_aux_prev[j][i] = tau22_aux[j][i];
+
+                tau11[j][i] = tau11_aux_prev[j][i]; tau22[j][i] = tau22_aux_prev[j][i];
+                tau11_aux[j][i] = tau11_aux_prev[j][i]; tau22_aux[j][i] = tau22_aux_prev[j][i];
             }
         }
         for (int j = 0; j <= ny; ++j) {
             for (int i = 0; i <= nx; ++i) {
-                tau12[j][i] = tau12_aux[j][i];
-                tau12_aux_prev[j][i] = tau12_aux[j][i];
+               // tau12[j][i] = tau12_aux[j][i];  tau12_aux_prev[j][i] = tau12_aux[j][i]; 
+                tau12_aux[j][i] = tau12_aux_prev[j][i];
+                tau12[j][i] = tau12_aux_prev[j][i]; 
             }
         }
-        diff = c_k;
+        //diff = c_k;
+        diff = diff_max[iter-2];
     }
     else
     {
-        alpha_boost = (1.0 + sqrt(1.0 + 4.0 * alpha_boost_prev * alpha_boost_prev)) / 2.0;
-        if(iter > 50)
-            momentum = 0.8* (alpha_boost_prev - 1.0) / alpha_boost;
-        else
-            momentum = (alpha_boost_prev - 1.0) / alpha_boost;
+        alpha_boost = 0.5* (1.0 + sqrt(1.0 + 4.0 * alpha_boost_prev * alpha_boost_prev)) ;
+        
+       momentum = (alpha_boost_prev - 1.0) / alpha_boost;
 
-        // Экстраполируем ВСЕ узлы (как было изначально)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
         for (int j = 0; j <= ny + 1; ++j) {
             for (int i = 0; i <= nx + 1; ++i) {
-                double old11 = tau11[j][i];
-                double old22 = tau22[j][i];
+                double old11 = tau11[j][i], old22 = tau22[j][i];
 
-                tau11[j][i] = tau11_aux[j][i] + momentum * (tau11_aux[j][i] - tau11_aux_prev[j][i]);
-                tau22[j][i] = tau22_aux[j][i] + momentum * (tau22_aux[j][i] - tau22_aux_prev[j][i]);
+                tau11[j][i] = tau11_aux[j][i] + momentum * (tau11_aux[j][i] - tau11_aux_prev[j][i]);  tau22[j][i] = tau22_aux[j][i] + momentum * (tau22_aux[j][i] - tau22_aux_prev[j][i]);
 
-                tau11_aux_prev[j][i] = tau11_aux[j][i];
-                tau22_aux_prev[j][i] = tau22_aux[j][i];
+                tau11_aux_prev[j][i] = tau11_aux[j][i]; tau22_aux_prev[j][i] = tau22_aux[j][i];
 
-                diff_tau11[j][i] = tau11[j][i] - old11;
-                diff_tau22[j][i] = tau22[j][i] - old22;
+                diff_tau11[j][i] = tau11[j][i] - old11;  diff_tau22[j][i] = tau22[j][i] - old22;
+               
             }
         }
 
@@ -412,7 +304,6 @@ double CavernaSolver2D::extrapolate_tau_next_optimized()
             for (int i = 0; i <= nx; ++i) {
                 double old12 = tau12[j][i];
                 tau12[j][i] = tau12_aux[j][i] + momentum * (tau12_aux[j][i] - tau12_aux_prev[j][i]);
-
                 tau12_aux_prev[j][i] = tau12_aux[j][i];
                 diff_tau12[j][i] = tau12[j][i] - old12;
             }
@@ -422,12 +313,10 @@ double CavernaSolver2D::extrapolate_tau_next_optimized()
         c_k_prev = c_k;
 
         norma_11_12(diff_tau11, diff_tau12, diff_tau22);
+        //diff = diff_l2_norma();
         diff = diff_max_norma();
     }
 
-    // Это ГЛАВНОЕ для фикса артефактов в углах: 
-    // Причесываем границы после математической экстраполяции
-    boundary_conditions(); 
 
     norma_11_12(tau11, tau12, tau22);
     return diff;

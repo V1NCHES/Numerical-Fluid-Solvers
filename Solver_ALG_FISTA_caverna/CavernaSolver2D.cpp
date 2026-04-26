@@ -173,7 +173,6 @@ void CavernaSolver2D::update_gamma()
     // Step 1: Вычисление производных dudx dvdy D12 = (dudy + dvdx)/2;
     compute_derivatives();
     double dom = 2.0 * (r + mu);
-    double T11, T22, T12;
     // Step 2: Вычисление производных  t11 = tau11 + 2r dudx; t22 = tau22 + 2r dvdy;  t12 = tau12 + r D12; 
     update_t();
     // Step 3: Вычисление Нормы   norma11 для gamma11, gamma22 осреднение gamma12;  norma12 для gamma12 осреднение gamma11 gamma22
